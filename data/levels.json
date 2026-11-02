@@ -1,0 +1,88 @@
+[
+  {
+    "id":"first-dispatch","title":"01 · 첫 출고","brief":"수량 계산과 출고를 붙이세요. 신호 계산은 독립적이지만 출력 순서는 지켜야 합니다.","goalLabel":"화물 계산 + 출고","goalIds":["cargo-total","cargo-send"],
+    "statements":[
+      {"id":"cargo-total","group":"cargo","label":"화물 수량 계산","code":"total = boxes * perBox","op":"set","target":"total","value":{"mul":[{"var":"boxes"},{"var":"perBox"}]}},
+      {"id":"signal-ready","group":"signal","label":"준비 신호 계산","code":"ready = signal + 1","op":"set","target":"ready","value":{"add":[{"var":"signal"},1]}},
+      {"id":"cargo-send","group":"cargo","label":"출고 수량 전송","code":"emit('cargo', total)","op":"emit","channel":"cargo","value":{"var":"total"}},
+      {"id":"signal-send","group":"signal","label":"준비 신호 전송","code":"emit('signal', ready)","op":"emit","channel":"signal","value":{"var":"ready"}}
+    ],"fixtures":[{"boxes":2,"perBox":6,"signal":0},{"boxes":5,"perBox":3,"signal":4}],"observe":["total","ready"]
+  },
+  {
+    "id":"power-window","title":"02 · 전력 창","brief":"전력 계산 세 장을 모으세요. 스캔 출력이 전력 출력보다 먼저 나가야 합니다.","goalLabel":"전력 계산 + 보정 + 전송","goalIds":["power-read","power-adjust","power-send"],
+    "statements":[
+      {"id":"power-read","group":"power","label":"전력 계산","code":"watts = voltage * amps","op":"set","target":"watts","value":{"mul":[{"var":"voltage"},{"var":"amps"}]}},
+      {"id":"scan-code","group":"scan","label":"스캔 번호 준비","code":"scanCode = batch + 1","op":"set","target":"scanCode","value":{"add":[{"var":"batch"},1]}},
+      {"id":"power-adjust","group":"power","label":"가용 전력 보정","code":"usable = watts * 0.9","op":"set","target":"usable","value":{"mul":[{"var":"watts"},0.9]}},
+      {"id":"scan-send","group":"scan","label":"스캔 번호 전송","code":"emit('scan', scanCode)","op":"emit","channel":"scan","value":{"var":"scanCode"}},
+      {"id":"power-send","group":"power","label":"전력 전송","code":"emit('power', usable)","op":"emit","channel":"power","value":{"var":"usable"}}
+    ],"fixtures":[{"voltage":220,"amps":2,"batch":10},{"voltage":110,"amps":5,"batch":0}],"observe":["watts","usable","scanCode"]
+  },
+  {
+    "id":"signal-chain","title":"03 · 신호 사슬","brief":"입력 신호를 두 번 가공합니다. 계산 순서는 유지하면서 신호 세 장을 붙이세요.","goalLabel":"신호 읽기 + 증폭 + 보정","goalIds":["signal-read","signal-gain","signal-offset"],
+    "statements":[
+      {"id":"signal-read","group":"signal","label":"신호 읽기","code":"raw = sensor + 0","op":"set","target":"raw","value":{"add":[{"var":"sensor"},0]}},
+      {"id":"cargo-count","group":"cargo","label":"화물 수량 준비","code":"packed = count * 2","op":"set","target":"packed","value":{"mul":[{"var":"count"},2]}},
+      {"id":"signal-gain","group":"signal","label":"신호 증폭","code":"gained = raw * 2","op":"set","target":"gained","value":{"mul":[{"var":"raw"},2]}},
+      {"id":"cargo-send","group":"cargo","label":"화물 수량 출력","code":"emit('cargo', packed)","op":"emit","channel":"cargo","value":{"var":"packed"}},
+      {"id":"signal-offset","group":"signal","label":"신호 보정","code":"adjusted = gained + 1","op":"set","target":"adjusted","value":{"add":[{"var":"gained"},1]}},
+      {"id":"signal-send","group":"signal","label":"보정 신호 출력","code":"emit('signal', adjusted)","op":"emit","channel":"signal","value":{"var":"adjusted"}}
+    ],"fixtures":[{"sensor":0,"count":3},{"sensor":7,"count":1}],"observe":["raw","gained","adjusted","packed"]
+  },
+  {
+    "id":"scan-before-send","title":"04 · 스캔 후 발송","brief":"스캔의 계산과 출력을 모으세요. 두 출력의 순서를 바꾸면 값이 같아도 실패합니다.","goalLabel":"스캔 번호 + 스캔 출력","goalIds":["scan-read","scan-send"],
+    "statements":[
+      {"id":"scan-read","group":"scan","label":"스캔 번호 계산","code":"tag = seed + 10","op":"set","target":"tag","value":{"add":[{"var":"seed"},10]}},
+      {"id":"power-calc","group":"power","label":"전력 계산","code":"load = units * 3","op":"set","target":"load","value":{"mul":[{"var":"units"},3]}},
+      {"id":"power-send","group":"power","label":"전력 먼저 전송","code":"emit('power', load)","op":"emit","channel":"power","value":{"var":"load"}},
+      {"id":"scan-send","group":"scan","label":"스캔 나중 전송","code":"emit('scan', tag)","op":"emit","channel":"scan","value":{"var":"tag"}},
+      {"id":"signal-mark","group":"signal","label":"완료 상태 기록","code":"done = true","op":"set","target":"done","value":true}
+    ],"fixtures":[{"seed":1,"units":2},{"seed":9,"units":5}],"observe":["tag","load","done"]
+  },
+  {
+    "id":"two-inputs","title":"05 · 두 입력의 함정","brief":"첫 입력에서는 차이가 가려질 수 있습니다. 신호 출력과 보정 세 장을 모든 입력에서 안전하게 모으세요.","goalLabel":"기존 신호 출력 + 보정 + 최종 출력","goalIds":["signal-old","signal-change","signal-new"],
+    "statements":[
+      {"id":"signal-old","group":"signal","label":"기존 신호 출력","code":"emit('before', signal * gate)","op":"emit","channel":"before","value":{"mul":[{"var":"signal"},{"var":"gate"}]}},
+      {"id":"cargo-prepare","group":"cargo","label":"화물 수량 준비","code":"crates = count + 1","op":"set","target":"crates","value":{"add":[{"var":"count"},1]}},
+      {"id":"signal-change","group":"signal","label":"신호 값 갱신","code":"signal = 2","op":"set","target":"signal","value":2},
+      {"id":"power-prepare","group":"power","label":"전력 값 준비","code":"power = voltage * 2","op":"set","target":"power","value":{"mul":[{"var":"voltage"},2]}},
+      {"id":"signal-new","group":"signal","label":"새 신호 출력","code":"emit('after', signal)","op":"emit","channel":"after","value":{"var":"signal"}},
+      {"id":"cargo-send","group":"cargo","label":"화물 출력","code":"emit('cargo', crates)","op":"emit","channel":"cargo","value":{"var":"crates"}}
+    ],"fixtures":[{"signal":2,"gate":0,"count":1,"voltage":110},{"signal":1,"gate":1,"count":4,"voltage":220},{"signal":8,"gate":2,"count":0,"voltage":24}],"observe":["signal","crates","power"]
+  },
+  {
+    "id":"same-color","title":"06 · 같은 색, 다른 일","brief":"같은 화물 그룹에도 이번 목표가 아닌 문장이 있습니다. 표시된 목표 두 장만 붙이세요.","goalLabel":"운임 계산 + 운임 출력","goalIds":["cargo-fee","cargo-fee-send"],
+    "statements":[
+      {"id":"cargo-fee","group":"cargo","label":"★ 운임 계산","code":"fee = weight * rate","op":"set","target":"fee","value":{"mul":[{"var":"weight"},{"var":"rate"}]}},
+      {"id":"cargo-audit","group":"cargo","label":"별도 화물 기록","code":"audit = packages + 100","op":"set","target":"audit","value":{"add":[{"var":"packages"},100]}},
+      {"id":"scan-ready","group":"scan","label":"스캔 준비 기록","code":"scanReady = true","op":"set","target":"scanReady","value":true},
+      {"id":"cargo-fee-send","group":"cargo","label":"★ 운임 출력","code":"emit('fee', fee)","op":"emit","channel":"fee","value":{"var":"fee"}},
+      {"id":"cargo-audit-send","group":"cargo","label":"별도 기록 출력","code":"emit('audit', audit)","op":"emit","channel":"audit","value":{"var":"audit"}}
+    ],"fixtures":[{"weight":3,"rate":4,"packages":2},{"weight":7,"rate":2,"packages":9}],"observe":["fee","audit","scanReady"]
+  },
+  {
+    "id":"shared-reading","title":"07 · 공유된 읽기","brief":"스캔이 중간 전력 값을 읽습니다. 그 읽기를 지키면서 전력 관련 네 장을 한 줄로 모으세요.","goalLabel":"전력 계산 네 장","goalIds":["power-base","power-boost","power-final","power-send"],
+    "statements":[
+      {"id":"power-base","group":"power","label":"기본 전력 계산","code":"base = volts * amps","op":"set","target":"base","value":{"mul":[{"var":"volts"},{"var":"amps"}]}},
+      {"id":"scan-snapshot","group":"scan","label":"기본 전력 스캔","code":"snapshot = base + 0","op":"set","target":"snapshot","value":{"add":[{"var":"base"},0]}},
+      {"id":"power-boost","group":"power","label":"전력 여유 계산","code":"boosted = base + reserve","op":"set","target":"boosted","value":{"add":[{"var":"base"},{"var":"reserve"}]}},
+      {"id":"signal-ready","group":"signal","label":"준비 신호 기록","code":"ready = true","op":"set","target":"ready","value":true},
+      {"id":"power-final","group":"power","label":"최종 전력 계산","code":"finalPower = boosted * 2","op":"set","target":"finalPower","value":{"mul":[{"var":"boosted"},2]}},
+      {"id":"power-send","group":"power","label":"최종 전력 출력","code":"emit('power', finalPower)","op":"emit","channel":"power","value":{"var":"finalPower"}},
+      {"id":"scan-send","group":"scan","label":"스캔 값 출력","code":"emit('scan', snapshot)","op":"emit","channel":"scan","value":{"var":"snapshot"}}
+    ],"fixtures":[{"volts":24,"amps":2,"reserve":3},{"volts":12,"amps":5,"reserve":0}],"observe":["base","snapshot","boosted","finalPower","ready"]
+  },
+  {
+    "id":"last-dispatch","title":"08 · 마지막 출고","brief":"세 단계의 화물 계산과 최종 출력을 모으세요. 스캔 출력은 맨 마지막이어야 합니다.","goalLabel":"화물 계산 세 장 + 최종 출력","goalIds":["cargo-base","cargo-extra","cargo-total","cargo-send"],
+    "statements":[
+      {"id":"cargo-base","group":"cargo","label":"기본 적재 수량","code":"base = boxes * perBox","op":"set","target":"base","value":{"mul":[{"var":"boxes"},{"var":"perBox"}]}},
+      {"id":"scan-tag","group":"scan","label":"출고 스캔 번호","code":"tag = batch + 1","op":"set","target":"tag","value":{"add":[{"var":"batch"},1]}},
+      {"id":"cargo-extra","group":"cargo","label":"추가 적재 반영","code":"extra = base + loose","op":"set","target":"extra","value":{"add":[{"var":"base"},{"var":"loose"}]}},
+      {"id":"signal-count","group":"signal","label":"신호 횟수 계산","code":"ticks = pulse * 2","op":"set","target":"ticks","value":{"mul":[{"var":"pulse"},2]}},
+      {"id":"cargo-total","group":"cargo","label":"총 적재 무게","code":"total = extra * weight","op":"set","target":"total","value":{"mul":[{"var":"extra"},{"var":"weight"}]}},
+      {"id":"power-ready","group":"power","label":"전원 준비 기록","code":"powered = true","op":"set","target":"powered","value":true},
+      {"id":"cargo-send","group":"cargo","label":"최종 출고 출력","code":"emit('cargo', total)","op":"emit","channel":"cargo","value":{"var":"total"}},
+      {"id":"scan-send","group":"scan","label":"출고 스캔 출력","code":"emit('scan', tag)","op":"emit","channel":"scan","value":{"var":"tag"}}
+    ],"fixtures":[{"boxes":2,"perBox":3,"loose":1,"weight":4,"batch":8,"pulse":2},{"boxes":5,"perBox":2,"loose":0,"weight":3,"batch":0,"pulse":7},{"boxes":0,"perBox":6,"loose":2,"weight":5,"batch":12,"pulse":0}],"observe":["base","extra","total","tag","ticks","powered"]
+  }
+]

@@ -1,0 +1,53 @@
+#screen { min-height: 65vh; }
+h1[tabindex="-1"]:focus { outline:none; }
+[hidden] { display:none !important; }
+.update-notice { max-width:var(--content-width); margin:0 auto; padding:12px 24px; border-bottom:1px solid var(--color-border); color:var(--color-lime); font-size:.85rem; }
+.resume-slot { min-height:1.2em; margin-top:1rem; }
+.resume-link { color:var(--color-violet); }
+.goal-line { display:flex; justify-content:space-between; gap:1rem; margin:1.4rem 0 1rem; padding:1rem; background:var(--color-lime-soft); color:var(--color-lime); border-radius:var(--radius-sm); }
+.goal-mark { color:var(--color-lime); font-size:.65em; margin-left:.25rem; }
+.statement-handle { touch-action:none; cursor:grab; background:transparent; color:var(--color-muted); min-width:44px; min-height:44px; border:0; }
+.statement-handle:active { cursor:grabbing; }
+.game-brief { max-width:58ch; }
+.game-main h1 { font-size:clamp(1.7rem,4vw,3.5rem); line-height:1.15; letter-spacing:-.05em; margin:1rem 0; }
+.game-main .board { padding:0; }
+.play-help { font-size:.75rem; margin-top:1rem; }
+.rules-note { padding:1.5rem 0; border-bottom:1px solid var(--color-border); }
+.rules-note p:not(.kicker) { font-size:1.35rem; line-height:1.6; }
+.rules-note ul { padding-left:1rem; font-size:.85rem; line-height:1.9; }
+.output-row code { overflow-wrap:anywhere; white-space:normal; }
+.output-panel > p { font-size:.75rem; line-height:1.8; margin:1rem 0 0; }
+.time-critical .timer-fill { background:var(--color-danger); }
+.time-critical [data-time] { color:var(--color-danger); }
+.pause-panel { border-color:var(--color-violet); }
+.mobile-hud.hud { display:none; }
+.next-stage-control { width:100%; }
+.leave-dialog { padding:0; border:0; background:transparent; color:var(--color-text); max-width:min(92vw,560px); overflow:visible; }
+.leave-dialog:not([open]) { display:none; }
+.leave-dialog::backdrop { background:#060805d9; backdrop-filter:blur(8px); }
+.leave-dialog .dialog { width:100%; }
+.dialog-message { min-height:1.5em; }
+.dialog-actions { display:flex; gap:.6rem; flex-wrap:wrap; }
+.dialog-actions .button { flex:1 1 40%; }
+.page-lead { font-size:clamp(1.2rem,3vw,2rem); line-height:1.7; color:var(--color-muted); }
+.guide-card { padding:1.6rem; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); }
+.guide-card h2 { font-size:1.3rem; margin:1rem 0; }
+.guide-card p,.guide-origin p { color:var(--color-muted); line-height:1.9; }
+.guide-controls,.guide-origin { margin:3rem 0; padding-top:2rem; border-top:1px solid var(--color-border); }
+.guide-controls table { width:100%; border-collapse:collapse; }
+.guide-controls td,.guide-controls th { padding:1rem; text-align:left; border-bottom:1px solid var(--color-border); }
+.table-wrap { overflow:auto; }
+.record-row { display:flex; align-items:center; gap:1.5rem; padding:1.4rem 0; border-bottom:1px solid var(--color-border); }
+.record-rank { color:var(--color-violet); font:700 1.3rem var(--font-mono); }
+.record-row strong { font:700 1.7rem var(--font-mono); }
+.record-row time { margin-left:auto; font-size:.8rem; color:var(--color-muted); }
+.record-row p { font-size:.8rem; margin:.3rem 0 0; }
+.empty-symbol { color:var(--color-lime); font-size:6rem; display:block; }
+.result-score small { font:500 1.2rem var(--font-sans); margin-left:.5rem; }
+.flow-burst { position:fixed; inset:46% auto auto 45%; pointer-events:none; z-index:75; }
+.flow-burst i { position:absolute; width:10px; height:24px; background:var(--color-lime); animation:flow-burst .85s cubic-bezier(.1,.7,.2,1) forwards; }
+.flow-burst i:nth-child(2n) { background:var(--color-violet); }
+@keyframes flow-burst { from { opacity:1; transform:translate(0,0) rotate(0); } to { opacity:0; transform:translate(var(--dx),var(--dy)) rotate(var(--turn)); } }
+@media(max-width:700px){.record-row{gap:.7rem}.record-row time{font-size:.65rem}.record-row strong{font-size:1.4rem}.game-controls{position:sticky;bottom:0;background:var(--color-bg);padding:.7rem 0;z-index:10}.game-controls .control-btn{flex:1 1 28%;}.game-aside{border-top:1px solid var(--color-border);padding-top:1.5rem}.goal-line{font-size:.8rem}.play-help{line-height:1.8}.flow-burst{left:50%;top:40%}}
+@media(prefers-reduced-motion:reduce){.flow-burst{display:none}}
+@media(max-width:780px){.mobile-hud.hud{display:flex;position:sticky;top:0;z-index:12;margin:1rem 0;box-shadow:0 4px 16px #0006}.desktop-hud.hud,.game-aside>.timer-track{display:none}.mobile-hud .hud-cell{flex:1;min-width:0}.game-controls{bottom:0}}
